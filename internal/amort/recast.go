@@ -106,8 +106,14 @@ func RecastReducePayment(in RecastInput) (RecastResult, error) {
 // RecastRateChange recomputes the schedule over the remaining term at a new
 // periodic rate. It behaves like reduce_payment (term unchanged) but with the
 // new rate. Past payments are immutable.
+//
+// The remaining term is OriginalTerm − PaidPeriods: only the unpaid periods are
+// rebuilt, so the loan's original maturity boundary (TermPeriods) is preserved
+// exactly. (A former +1 here inflated the remaining count by one period, which
+// recomputed the payment as if an extra period existed and pushed the effective
+// maturity past the original boundary.)
 func RecastRateChange(in RecastInput) (RecastResult, error) {
-	remaining := in.OriginalTerm - in.PaidPeriods + 1
+	remaining := in.OriginalTerm - in.PaidPeriods
 	if remaining < 0 {
 		return RecastResult{}, fmt.Errorf("rate_change: paid %d exceeds term %d", in.PaidPeriods, in.OriginalTerm)
 	}

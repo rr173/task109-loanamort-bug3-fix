@@ -703,8 +703,10 @@ func (s *Service) ChangeRate(ctx context.Context, loanID string, req ChangeRateR
 			return fmt.Errorf("%w: loan is already fully paid", ErrConflict)
 		}
 		// Validate the new rate produces a well-formed remaining schedule and
-		// recompute the per-period payment at the new rate.
-		remaining := l.TermPeriods - st.PaidPeriods + 1
+		// recompute the per-period payment at the new rate. Only the unpaid
+		// periods (TermPeriods − PaidPeriods) are recast; the loan's original
+		// maturity boundary (TermPeriods) is left untouched.
+		remaining := l.TermPeriods - st.PaidPeriods
 		if remaining > 0 && st.Outstanding > 0 {
 			res, err := amort.RecastRateChange(amort.RecastInput{
 				Type:              l.Type,
